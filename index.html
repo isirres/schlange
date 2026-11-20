@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Schlange</title>
+  <style>
+    :root { --accent:#35d399; --dark:#09120f; --panel:#111e19; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; display:grid; place-items:center; background:radial-gradient(circle at top,#18372b,var(--dark)); color:#effff8; font-family:Inter,system-ui,sans-serif; }
+    .game { width:min(92vw,520px); }
+    .top { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+    h1 { margin:0; font-size:clamp(22px,6vw,34px); }
+    .score { background:var(--panel); border:1px solid #27483b; border-radius:14px; padding:10px 16px; font-weight:800; }
+    canvas { width:100%; aspect-ratio:1; display:block; border-radius:22px; background:#0d1814; box-shadow:0 20px 60px #0007; border:1px solid #294639; touch-action:none; }
+    .controls { display:grid; grid-template-columns:repeat(3,58px); grid-template-rows:repeat(2,58px); justify-content:center; gap:8px; margin-top:16px; }
+    button { border:1px solid #32604d; border-radius:16px; background:var(--panel); color:white; font-size:24px; cursor:pointer; box-shadow:0 6px 18px #0004; }
+    button:active { background:#21372f; transform:scale(.95); }
+    #up { grid-column:2; } #left { grid-column:1; grid-row:2; } #down { grid-column:2; grid-row:2; } #right { grid-column:3; grid-row:2; }
+  </style>
+</head>
+<body>
+  <main class="game">
+    <div class="top"><h1>Schlange</h1><div class="score">Punkte: <span id="score">0</span></div></div>
+    <canvas id="board" width="600" height="600" aria-label="Snake-Spiel"></canvas>
+    <div class="controls" aria-label="Touch-Steuerung">
+      <button id="up" aria-label="Nach oben">▲</button>
+      <button id="left" aria-label="Nach links">◀</button>
+      <button id="down" aria-label="Nach unten">▼</button>
+      <button id="right" aria-label="Nach rechts">▶</button>
+    </div>
+  </main>
+<script>
+const canvas=document.getElementById('board'),ctx=canvas.getContext('2d'),scoreEl=document.getElementById('score');
+const size=20, cells=30; let snake,dir,nextDir,food,score,timer,running;
+function reset(){snake=[{x:15,y:15},{x:14,y:15},{x:13,y:15}];dir={x:1,y:0};nextDir=dir;score=0;scoreEl.textContent=0;placeFood();running=true;clearInterval(timer);timer=setInterval(tick,110)}
+function placeFood(){do{food={x:Math.floor(Math.random()*cells),y:Math.floor(Math.random()*cells)}}while(snake.some(s=>s.x===food.x&&s.y===food.y))}
+function tick(){dir=nextDir;const head={x:(snake[0].x+dir.x+cells)%cells,y:(snake[0].y+dir.y+cells)%cells};if(snake.some(s=>s.x===head.x&&s.y===head.y)){gameOver();return}snake.unshift(head);if(head.x===food.x&&head.y===food.y){score++;scoreEl.textContent=score;placeFood()}else snake.pop();draw()}
+function draw(){ctx.fillStyle='#0d1814';ctx.fillRect(0,0,600,600);ctx.fillStyle='#12231d';for(let y=0;y<cells;y++)for(let x=0;x<cells;x++)if((x+y)%2===0)ctx.fillRect(x*size,y*size,size,size);ctx.fillStyle='#35d399';for(const s of snake){ctx.beginPath();ctx.roundRect(s.x*size+2,s.y*size+2,size-4,size-4,7);ctx.fill()}ctx.fillStyle='#ff6b81';ctx.beginPath();ctx.arc(food.x*size+10,food.y*size+10,8,0,Math.PI*2);ctx.fill()}
+function gameOver(){clearInterval(timer);running=false;ctx.fillStyle='#09120fcc';ctx.fillRect(0,0,600,600);ctx.fillStyle='white';ctx.textAlign='center';ctx.font='700 48px system-ui';ctx.fillText('Spiel vorbei',300,275);ctx.font='24px system-ui';ctx.fillText('Leertaste zum Neustart',300,325)}
+function setDir(x,y){if(running&&(x!==-dir.x||y!==-dir.y))nextDir={x,y}}
+window.addEventListener('keydown',e=>{const k={ArrowUp:[0,-1],w:[0,-1],ArrowDown:[0,1],s:[0,1],ArrowLeft:[-1,0],a:[-1,0],ArrowRight:[1,0],d:[1,0]}[e.key];if(k){e.preventPreventDefault();setDir(...k)}if(e.key===' '&&!running)reset()});
+for(const [id,x,y] of [['up',0,-1],['down',0,1],['left',-1,0],['right',1,0]])document.getElementById(id).addEventListener('pointerdown',()=>setDir(x,y));
+let touchStart=null;canvas.addEventListener('touchstart',e=>{touchStart={x:e.touches[0].clientX,y:e.touches[0].clientX}}, {passive:true});canvas.addEventListener('touchend',e=>{if(!touchStart)return;const dx=e.changedTouches[0].clientX-touchStart.x,dy=e.changedTouches[0].clientY-touchStart.y;if(Math.max(Math.abs(dx),Math.abs(dy))>20)setDir(Math.abs(dx)>Math.abs(dy)?Math.sign(dx):0,Math.abs(dy)>=Math.abs(dx)?Math.sign(dy):0);touchStart=null},{passive:true});
+reset();
+</script>
+</body>
+</html>
