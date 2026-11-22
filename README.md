@@ -1,13 +1,17 @@
-# Snake-Spiel
+# Schlange – Snake-Spiel
 
-Ein modernes deutsches Snake-Spiel für Desktop und Smartphone.
+Ein modernes deutsches Snake-Spiel für Desktop und Smartphone. Das Futter ist eine Wassermelone.
+
+## Spielen
+
+GitHub Pages: https://isirres.github.io/schlange/
 
 ## Lokal starten
 
-Die Datei `index.html` einfach im Browser öffnen.
+`index.html` einfach im Browser öffnen.
 
 ## Steuerung
 
 - Pfeiltasten oder WASD
-- Touch-Bedienelemente
-- Wischen auf dem Spielfeld
+- Touch-Steuerung über die Pfeile
+- Auf dem Spielfeld wischen
