@@ -32,8 +32,9 @@
   </main>
 <script>
 const canvas=document.getElementById('board'),ctx=canvas.getContext('2d'),scoreEl=document.getElementById('score');
-const size=30,cells=20;let snake,dir,nextDir,food,score,timer,running;
-function reset(){snake=[{x:10,y:10},{x:9,y:10},{x:8,y:10}];dir={x:1,y:0};nextDir=dir;score=0;scoreEl.textContent=0;placeFood();running=true;clearInterval(timer);timer=setInterval(tick,130)}
+// Weniger, dafür größere Felder: jedes Pixel der Schlange ist 40 x 40.
+const size=40,cells=15;let snake,dir,nextDir,food,score,timer,running;
+function reset(){snake=[{x:7,y:7},{x:6,y:7},{x:5,y:7}];dir={x:1,y:0};nextDir={x:1,y:0};score=0;scoreEl.textContent=0;placeFood();running=true;clearInterval(timer);draw();timer=setInterval(tick,140)}
 function placeFood(){do{food={x:Math.floor(Math.random()*cells),y:Math.floor(Math.random()*cells)}}while(snake.some(s=>s.x===food.x&&s.y===food.y))}
 function tick(){dir=nextDir;const head={x:snake[0].x+dir.x,y:snake[0].y+dir.y};
   if(head.x<0||head.x>=cells||head.y<0||head.y>=cells||snake.some(s=>s.x===head.x&&s.y===head.y)){gameOver();return}
@@ -43,18 +44,23 @@ function draw(){
   ctx.fillStyle='#0d1814';ctx.fillRect(0,0,600,600);
   ctx.fillStyle='#12231d';for(let y=0;y<cells;y++)for(let x=0;x<cells;x++)if((x+y)%2===0)ctx.fillRect(x*size,y*size,size,size);
   ctx.strokeStyle='#294639';ctx.lineWidth=4;ctx.strokeRect(2,2,596,596);
-  ctx.fillStyle='#35d399';for(const s of snake){ctx.beginPath();ctx.roundRect(s.x*size+3,s.y*size+3,size-6,size-6,9);ctx.fill()}
-  const cx=food.x*size+15,cy=food.y*size+15;
-  ctx.beginPath();ctx.arc(cx,cy,13,0,Math.PI*2);ctx.fillStyle='#176b43';ctx.fill();
-  ctx.beginPath();ctx.arc(cx,cy,10,0,Math.PI*2);ctx.fillStyle='#3baa67';ctx.fill();
-  ctx.beginPath();ctx.arc(cx,cy,7,0,Math.PI*2);ctx.fillStyle='#ff5f68';ctx.fill();
-  ctx.fillStyle='#1a201b';ctx.beginPath();ctx.ellipse(cx-3,cy-3,1.2,2.2,-0.5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(cx+3,cy+2,1.2,2.2,-0.5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#35d399';for(const s of snake){ctx.beginPath();ctx.roundRect(s.x*size+3,s.y*size+3,size-6,size-6,11);ctx.fill()}
+  // Zwei gut sichtbare Augen auf dem Kopf, passend zur Laufrichtung.
+  const h=snake[0],cx=h.x*size+size/2,cy=h.y*size+size/2;
+  const eyePositions=dir.x===1?[[cx+8,cy-10],[cx+8,cy+10]]:dir.x===-1?[[cx-8,cy-10],[cx-8,cy+10]]:dir.y===-1?[[cx-10,cy-8],[cx+10,cy-8]]:[[cx-10,cy+8],[cx+10,cy+8]];
+  for(const [ex,ey] of eyePositions){ctx.beginPath();ctx.arc(ex,ey,5,0,Math.PI*2);ctx.fillStyle='white';ctx.fill();ctx.beginPath();ctx.arc(ex+dir.x*1.5,ey+dir.y*1.5,2.4,0,Math.PI*2);ctx.fillStyle='#10231a';ctx.fill()}
+  const fx=food.x*size+size/2,fy=food.y*size+size/2;
+  ctx.beginPath();ctx.arc(fx,fy,16,0,Math.PI*2);ctx.fillStyle='#176b43';ctx.fill();
+  ctx.beginPath();ctx.arc(fx,fy,12,0,Math.PI*2);ctx.fillStyle='#3baa67';ctx.fill();
+  ctx.beginPath();ctx.arc(fx,fy,8,0,Math.PI*2);ctx.fillStyle='#ff5f68';ctx.fill();
+  ctx.fillStyle='#1a201b';ctx.beginPath();ctx.ellipse(fx-3,fy-3,1.4,2.4,-0.5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(fx+3,fy+2,1.4,2.4,-0.5,0,Math.PI*2);ctx.fill();
 }
-function gameOver(){clearInterval(timer);running=false;ctx.fillStyle='#09120fcc';ctx.fillRect(0,0,600,600);ctx.fillStyle='white';ctx.textAlign='center';ctx.font='700 48px system-ui';ctx.fillText('Spiel vorbei',300,275);ctx.font='24px system-ui';ctx.fillText('Leertaste zum Neustart',300,325)}
+function gameOver(){clearInterval(timer);running=false;ctx.fillStyle='#09120fcc';ctx.fillRect(0,0,600,600);ctx.fillStyle='white';ctx.textAlign='center';ctx.font='700 48px system-ui';ctx.fillText('Spiel vorbei',300,265);ctx.font='24px system-ui';ctx.fillText('Tippe oder drücke eine Taste',300,315);ctx.fillText('zum Weiterspielen',300,350)}
 function setDir(x,y){if(running&&(x!==-dir.x||y!==-dir.y))nextDir={x,y}}
-window.addEventListener('keydown',e=>{const k={ArrowUp:[0,-1],w:[0,-1],ArrowDown:[0,1],s:[0,1],ArrowLeft:[-1,0],a:[-1,0],ArrowRight:[1,0],d:[1,0]}[e.key];if(k){e.preventDefault();setDir(...k)}if(e.key===' '&&!running)reset()});
-for(const [id,x,y] of [['up',0,-1],['down',0,1],['left',-1,0],['right',1,0]])document.getElementById(id).addEventListener('pointerdown',()=>setDir(x,y));
+window.addEventListener('keydown',e=>{if(!running){reset();return}const k={ArrowUp:[0,-1],w:[0,-1],ArrowDown:[0,1],s:[0,1],ArrowLeft:[-1,0],a:[-1,0],ArrowRight:[1,0],d:[1,0]}[e.key];if(k){e.preventDefault();setDir(...k)}});
+for(const [id,x,y] of [['up',0,-1],['down',0,1],['left',-1,0],['right',1,0]])document.getElementById(id).addEventListener('pointerdown',()=>{if(!running)reset();else setDir(x,y)});
 let touchStart=null;
+canvas.addEventListener('pointerdown',()=>{if(!running)reset()});
 canvas.addEventListener('touchstart',e=>{touchStart={x:e.touches[0].clientX,y:e.touches[0].clientY}}, {passive:true});
 canvas.addEventListener('touchend',e=>{if(!touchStart)return;const dx=e.changedTouches[0].clientX-touchStart.x,dy=e.changedTouches[0].clientY-touchStart.y;if(Math.max(Math.abs(dx),Math.abs(dy))>20)setDir(Math.abs(dx)>Math.abs(dy)?Math.sign(dx):0,Math.abs(dy)>=Math.abs(dx)?Math.sign(dy):0);touchStart=null},{passive:true});
 reset();
